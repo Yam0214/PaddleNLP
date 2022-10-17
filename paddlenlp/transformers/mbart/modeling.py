@@ -22,6 +22,15 @@ import paddle.tensor as tensor
 from paddle.nn import Layer, Embedding
 
 from .. import PretrainedModel, register_base_model
+from ...modeling_outputs import (
+    BaseModelOutput,
+    BaseModelOutputWithPastAndCrossAttentions,
+    CausalLMOutputWithCrossAttentions,
+    Seq2SeqLMOutput,
+    Seq2SeqModelOutput,
+    Seq2SeqQuestionAnsweringModelOutput,
+    Seq2SeqSequenceClassifierOutput,
+)
 
 __all__ = [
     'MBartModel', 'MBartPretrainedModel', 'MBartEncoder', 'MBartDecoder',
@@ -252,7 +261,13 @@ class MBartEncoder(MBartPretrainedModel):
                                              nn.LayerNorm(d_model))
         self.apply(self.init_weights)
 
-    def forward(self, input_ids=None, attention_mask=None, **kwargs):
+    def forward(self,
+                input_ids=None,
+                attention_mask=None,
+                output_attentions=False,
+                output_hidden_states=False,
+                return_dict=False,
+                **kwargs):
         """
         The MBartEncoder forward method, overrides the `__call__()` special method.
 
@@ -286,7 +301,11 @@ class MBartEncoder(MBartPretrainedModel):
             attention_mask = (1.0 - attention_mask) * -1e4
         attention_mask.stop_gradient = True
 
-        encoder_output = self.encoder(encoder_input, src_mask=attention_mask)
+        encoder_output = self.encoder(encoder_input,
+                                      src_mask=attention_mask,
+                                      output_attentions=output_attentions,
+                                      output_hidden_states=output_hidden_states,
+                                      return_dict=return_dict)
         return encoder_output
 
 
@@ -335,12 +354,17 @@ class MBartDecoder(MBartPretrainedModel):
                                              nn.LayerNorm(d_model))
         self.apply(self.init_weights)
 
-    def forward(self,
-                decoder_input_ids=None,
-                decoder_attention_mask=None,
-                encoder_output=None,
-                memory_mask=None,
-                cache=None):
+    def forward(
+        self,
+        decoder_input_ids=None,
+        decoder_attention_mask=None,
+        encoder_output=None,
+        memory_mask=None,
+        cache=None,
+        output_attentions=False,
+        output_hidden_states=False,
+        return_dict=False,
+    ):
         """
         The MBartDecoder forward method, overrides the `__call__()` special method.
 
@@ -381,7 +405,10 @@ class MBartDecoder(MBartPretrainedModel):
                                       memory=encoder_output,
                                       tgt_mask=decoder_attention_mask,
                                       memory_mask=memory_mask,
-                                      cache=cache)
+                                      cache=cache,
+                                      output_attentions=output_attentions,
+                                      output_hidden_states=output_hidden_states,
+                                      return_dict=return_dict)
         return decoder_output
 
 
